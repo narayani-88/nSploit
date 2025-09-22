@@ -274,9 +274,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="modules_data.js?v=3.1" onerror="console.error('Failed to load modules_data.js')"></script>
     <script>
-        // Embedded modules database to avoid external file loading issues
-        const MODULES_DB = [
+        let allModules = [];
+        
+        // Fallback modules in case external file fails to load
+        const FALLBACK_MODULES = [
             {
                 "name": "TCP Port Scanner",
                 "path": "auxiliary/scanner/portscan/tcp",
@@ -288,16 +291,6 @@
                 "options": ["RHOSTS", "PORTS", "THREADS", "TIMEOUT"]
             },
             {
-                "name": "SYN Port Scanner",
-                "path": "auxiliary/scanner/portscan/syn",
-                "category": "Port Scanning",
-                "description": "Fast SYN port scanner for stealth scanning",
-                "targets": ["Any", "Network"],
-                "tags": ["syn", "port", "scan", "stealth", "fast"],
-                "usage": "use auxiliary/scanner/portscan/syn\nset RHOSTS target_ip\nset PORTS 1-65535\nrun",
-                "options": ["RHOSTS", "PORTS", "INTERFACE", "SNAPLEN"]
-            },
-            {
                 "name": "SMB Version Scanner",
                 "path": "auxiliary/scanner/smb/smb_version",
                 "category": "Service Scanning",
@@ -306,36 +299,21 @@
                 "tags": ["smb", "version", "scan", "windows"],
                 "usage": "use auxiliary/scanner/smb/smb_version\nset RHOSTS target_ip\nrun",
                 "options": ["RHOSTS", "THREADS"]
-            },
-            {
-                "name": "HTTP Version Scanner",
-                "path": "auxiliary/scanner/http/http_version",
-                "category": "Web Scanning",
-                "description": "Detect HTTP server version and information",
-                "targets": ["Web", "Any"],
-                "tags": ["http", "web", "version", "fingerprint"],
-                "usage": "use auxiliary/scanner/http/http_version\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "RPORT", "THREADS"]
-            },
-            {
-                "name": "EternalBlue SMB Scanner",
-                "path": "auxiliary/scanner/smb/smb_ms17_010",
-                "category": "Vulnerability Scanning",
-                "description": "Check for MS17-010 EternalBlue vulnerability",
-                "targets": ["Windows"],
-                "tags": ["smb", "eternalblue", "ms17-010", "vulnerability"],
-                "usage": "use auxiliary/scanner/smb/smb_ms17_010\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "THREADS"]
             }
         ];
-
-        let allModules = [];
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             try {
-                allModules = MODULES_DB;
-                console.log('✅ Loaded', allModules.length, 'modules successfully');
+                // Check if MODULES_DB is defined
+                if (typeof MODULES_DB === 'undefined') {
+                    console.warn('MODULES_DB is not defined. Using fallback modules.');
+                    allModules = FALLBACK_MODULES;
+                    showWarning('Using limited module set. Full database may not have loaded properly.');
+                } else {
+                    allModules = MODULES_DB;
+                    console.log('Loaded', allModules.length, 'modules from external database');
+                }
                 
                 loadCategories();
                 loadTargets();
@@ -348,16 +326,49 @@
                     if (e.key === 'Enter') performSearch();
                 });
                 
-                console.log('🚀 nSploit initialized successfully');
+                console.log('nSploit initialized successfully');
             } catch (error) {
-                console.error('❌ Error initializing nSploit:', error);
+                console.error('Error initializing nSploit:', error);
                 showError('Error initializing application: ' + error.message);
             }
         });
 
+        // Show error message to user
+        function showError(message) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h5>Error</h5>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i class="fas fa-refresh"></i> Reload Page
+                    </button>
+                </div>
+            `;
+        }
+
+        // Show warning message to user
+        function showWarning(message) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="text-center text-warning">
+                    <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                    <h5>Warning</h5>
+                    <p>${message}</p>
+                    <p><small>You can still search the available modules below.</small></p>
+                </div>
+            `;
+        }
+
         // Load categories
         function loadCategories() {
             try {
+                if (!allModules || allModules.length === 0) {
+                    console.error('No modules available for category loading');
+                    return;
+                }
+                
                 const categories = [...new Set(allModules.map(module => module.category))].sort();
                 const select = document.getElementById('categoryFilter');
                 
@@ -368,7 +379,7 @@
                     select.appendChild(option);
                 });
                 
-                console.log('📂 Loaded', categories.length, 'categories');
+                console.log('Loaded', categories.length, 'categories');
             } catch (error) {
                 console.error('Error loading categories:', error);
             }
@@ -377,6 +388,11 @@
         // Load targets
         function loadTargets() {
             try {
+                if (!allModules || allModules.length === 0) {
+                    console.error('No modules available for target loading');
+                    return;
+                }
+                
                 const targets = [...new Set(allModules.flatMap(module => module.targets))].sort();
                 const select = document.getElementById('targetFilter');
                 
@@ -387,7 +403,7 @@
                     select.appendChild(option);
                 });
                 
-                console.log('🎯 Loaded', targets.length, 'targets');
+                console.log('Loaded', targets.length, 'targets');
             } catch (error) {
                 console.error('Error loading targets:', error);
             }
@@ -396,6 +412,11 @@
         // Perform search
         function performSearch() {
             try {
+                if (!allModules || allModules.length === 0) {
+                    showError('No modules available for search. Please refresh the page.');
+                    return;
+                }
+                
                 const query = document.getElementById('searchQuery').value.toLowerCase();
                 const category = document.getElementById('categoryFilter').value;
                 const target = document.getElementById('targetFilter').value;
@@ -422,7 +443,7 @@
                     return true;
                 });
                 
-                console.log('🔍 Search completed:', results.length, 'results found');
+                console.log('Search completed:', results.length, 'results found');
                 displayResults(results);
                 document.getElementById('resultCount').textContent = results.length;
             } catch (error) {
@@ -524,21 +545,6 @@
                     document.body.removeChild(toast);
                 }, 2000);
             });
-        }
-
-        // Show error message to user
-        function showError(message) {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `
-                <div class="text-center text-danger">
-                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                    <h5>Error</h5>
-                    <p>${message}</p>
-                    <button class="btn btn-primary" onclick="location.reload()">
-                        <i class="fas fa-refresh"></i> Reload Page
-                    </button>
-                </div>
-            `;
         }
     </script>
 </body>
