@@ -213,18 +213,8 @@
                     </div>
 
                     <!-- Search Button -->
-                    <button id="searchBtn" class="btn btn-primary w-100 mb-2">
+                    <button id="searchBtn" class="btn btn-primary w-100">
                         <i class="fas fa-search"></i> Search Modules
-                    </button>
-                    
-                    <!-- Show All Button -->
-                    <button id="showAllBtn" class="btn btn-outline-primary w-100 mb-2">
-                        <i class="fas fa-list"></i> Show All Modules
-                    </button>
-                    
-                    <!-- Debug Button -->
-                    <button id="debugBtn" class="btn btn-outline-warning w-100" style="font-size: 0.8em;">
-                        <i class="fas fa-bug"></i> Debug Search
                     </button>
 
                     <!-- Quick Actions -->
@@ -284,7 +274,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="modules_data.js?v=3.4"></script>
+    <script src="modules_data.js?v=3.1" onerror="console.error('Failed to load modules_data.js')"></script>
     <script>
         let allModules = [];
         
@@ -313,69 +303,35 @@
         ];
 
         // Initialize the application
-        function initApp() {
+        document.addEventListener('DOMContentLoaded', function() {
             try {
-                console.log('🚀 Initializing nSploit...');
-                console.log('🔍 Checking for MODULES_DB:', typeof MODULES_DB !== 'undefined' ? 'Found' : 'Not found');
-                
-                // Check if we have modules loaded
-                if (typeof MODULES_DB !== 'undefined' && MODULES_DB.length > 0) {
-                    allModules = MODULES_DB;
-                    console.log('✅ Using', allModules.length, 'modules from database');
-                    console.log('📋 First module example:', allModules[0]?.name || 'No modules');
-                } else {
-                    console.warn('❌ No modules found. Using fallback modules.');
+                // Check if MODULES_DB is defined
+                if (typeof MODULES_DB === 'undefined') {
+                    console.warn('MODULES_DB is not defined. Using fallback modules.');
                     allModules = FALLBACK_MODULES;
-                    console.log('🔄 Fallback modules loaded:', allModules.length);
                     showWarning('Using limited module set. Full database may not have loaded properly.');
+                } else {
+                    allModules = MODULES_DB;
+                    console.log('Loaded', allModules.length, 'modules from external database');
                 }
-
-                // Event listeners
-                document.getElementById('searchBtn').addEventListener('click', function() {
-                    console.log('🔍 Search button clicked');
-                    performSearch();
-                });
-                document.getElementById('showAllBtn').addEventListener('click', function() {
-                    console.log('📋 Show All button clicked');
-                    displayResults(allModules);
-                    document.getElementById('resultCount').textContent = allModules.length;
-                });
-                document.getElementById('debugBtn').addEventListener('click', function() {
-                    console.log('🐛 DEBUG: Testing search functionality');
-                    console.log('🐛 allModules length:', allModules.length);
-                    console.log('🐛 Search input value:', document.getElementById('searchQuery').value);
-                    console.log('🐛 Category filter value:', document.getElementById('categoryFilter').value);
-                    console.log('🐛 Target filter value:', document.getElementById('targetFilter').value);
-                    
-                    // Test the search function directly
-                    console.log('🐛 Calling performSearch() directly...');
-                    performSearch();
-                });
-                document.getElementById('clearBtn').addEventListener('click', clearResults);
-                document.getElementById('searchQuery').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        console.log('⌨️ Enter key pressed in search box');
-                        performSearch();
-                    }
-                });
-
+                
                 loadCategories();
                 loadTargets();
                 document.getElementById('totalModules').textContent = allModules.length;
                 
-                console.log('✅ nSploit initialized successfully with', allModules.length, 'modules');
+                // Event listeners
+                document.getElementById('searchBtn').addEventListener('click', performSearch);
+                document.getElementById('clearBtn').addEventListener('click', clearResults);
+                document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') performSearch();
+                });
+                
+                console.log('nSploit initialized successfully');
             } catch (error) {
-                console.error('❌ Error initializing nSploit:', error);
+                console.error('Error initializing nSploit:', error);
                 showError('Error initializing application: ' + error.message);
             }
-        }
-
-        // Initialize when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
-        }
+        });
 
         // Show error message to user
         function showError(message) {
@@ -456,31 +412,14 @@
         // Perform search
         function performSearch() {
             try {
-                console.log('🔍 Starting search...');
-                console.log('📊 Total modules available:', allModules ? allModules.length : 'undefined');
-                
                 if (!allModules || allModules.length === 0) {
-                    console.error('❌ No modules available for search');
                     showError('No modules available for search. Please refresh the page.');
                     return;
                 }
                 
-                const query = document.getElementById('searchQuery').value.toLowerCase().trim();
+                const query = document.getElementById('searchQuery').value.toLowerCase();
                 const category = document.getElementById('categoryFilter').value;
                 const target = document.getElementById('targetFilter').value;
-
-                console.log('🔍 Search parameters:');
-                console.log('  - Query:', query || '(empty)');
-                console.log('  - Category:', category || '(any)');
-                console.log('  - Target:', target || '(any)');
-
-                // If no search criteria provided, show all modules
-                if (!query && !category && !target) {
-                    console.log('📋 No filters applied, showing all modules');
-                    displayResults(allModules);
-                    document.getElementById('resultCount').textContent = allModules.length;
-                    return;
-                }
 
                 let results = allModules.filter(module => {
                     // Filter by category if specified
@@ -504,39 +443,11 @@
                     return true;
                 });
                 
-                console.log('✅ Search completed:', results.length, 'results found');
-                
-                // Show helpful message if no results found with filters
-                if (results.length === 0 && (query || category || target)) {
-                    console.log('💡 No results found - suggesting to clear filters');
-                    const container = document.getElementById('resultsContainer');
-                    container.innerHTML = `
-                        <div class="text-center text-warning">
-                            <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                            <h5>No modules found</h5>
-                            <p>No modules match your current search criteria:</p>
-                            <ul class="list-unstyled">
-                                ${query ? `<li><strong>Search:</strong> "${query}"</li>` : ''}
-                                ${category ? `<li><strong>Category:</strong> ${category}</li>` : ''}
-                                ${target ? `<li><strong>Target:</strong> ${target}</li>` : ''}
-                            </ul>
-                            <div class="mt-3">
-                                <button class="btn btn-primary me-2" onclick="clearResults()">
-                                    <i class="fas fa-times"></i> Clear Filters
-                                </button>
-                                <button class="btn btn-outline-primary" onclick="document.getElementById('showAllBtn').click()">
-                                    <i class="fas fa-list"></i> Show All Modules
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    displayResults(results);
-                }
-                
+                console.log('Search completed:', results.length, 'results found');
+                displayResults(results);
                 document.getElementById('resultCount').textContent = results.length;
             } catch (error) {
-                console.error('❌ Error performing search:', error);
+                console.error('Error performing search:', error);
                 showError('Error performing search: ' + error.message);
             }
         }
@@ -549,16 +460,9 @@
 
         // Display results
         function displayResults(modules) {
-            console.log('🖥️ displayResults called with', modules.length, 'modules');
             const container = document.getElementById('resultsContainer');
             
-            if (!container) {
-                console.error('❌ resultsContainer not found!');
-                return;
-            }
-            
             if (modules.length === 0) {
-                console.log('📋 No modules to display');
                 container.innerHTML = `
                     <div class="text-center text-muted">
                         <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
@@ -568,7 +472,6 @@
                 return;
             }
 
-            console.log('🔨 Building HTML for', modules.length, 'modules');
             container.innerHTML = modules.map(module => `
                 <div class="module-card">
                     <div class="d-flex justify-content-between align-items-start mb-3">
@@ -610,12 +513,10 @@
                     </details>
                 </div>
             `).join('');
-            console.log('✅ HTML built and inserted into container');
         }
 
         // Clear results
         function clearResults() {
-            console.log('🧹 Clearing all filters and results');
             document.getElementById('searchQuery').value = '';
             document.getElementById('categoryFilter').value = '';
             document.getElementById('targetFilter').value = '';
@@ -623,7 +524,6 @@
                 <div class="text-center text-muted">
                     <i class="fas fa-search fa-3x mb-3"></i>
                     <p>Enter a search query or select a category to find modules</p>
-                    <p><small class="text-info">💡 Tip: Use "Show All Modules" to see everything, or clear filters before searching</small></p>
                 </div>
             `;
             document.getElementById('resultCount').textContent = '0';
