@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Netlify Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test-box { background: white; padding: 20px; border-radius: 8px; margin: 10px 0; }
+        .success { border-left: 4px solid #28a745; }
+        .info { border-left: 4px solid #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Netlify Deployment Test</h1>
+    
+    <div class="test-box success">
+        <h3>✅ HTML Loading Test</h3>
+        <p>If you can see this page, HTML files are loading correctly on Netlify.</p>
+    </div>
+    
+    <div class="test-box info">
+        <h3>📅 Deployment Info</h3>
+        <p><strong>Last Updated:</strong> <span id="timestamp"></span></p>
+        <p><strong>Test Status:</strong> <span id="status">Running...</span></p>
+    </div>
+    
+    <div class="test-box info">
+        <h3>🔗 Quick Links</h3>
+        <p><a href="index.html">Main Site (index.html)</a></p>
+        <p><a href="debug.html">Debug Page</a></p>
+    </div>
+    
+    <script>
+        // Set timestamp
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // Test JavaScript execution
+        document.getElementById('status').textContent = 'JavaScript Working ✅';
+        document.getElementById('status').style.color = 'green';
+        
+        console.log('🧪 Test page loaded successfully at:', new Date().toISOString());
+        console.log('🌐 Current URL:', window.location.href);
+        console.log('📱 User Agent:', navigator.userAgent);
+    </script>
+</body>
+</html>
