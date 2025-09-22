@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nSploit Debug Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .debug-box { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .warning { border-left: 4px solid #ffc107; }
+        .info { border-left: 4px solid #17a2b8; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 nSploit Debug Information</h1>
+    
+    <div id="results"></div>
+    
+    <script src="modules_data.js?v=3.1"></script>
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(type, title, content) {
+            const div = document.createElement('div');
+            div.className = `debug-box ${type}`;
+            div.innerHTML = `<h3>${title}</h3><div>${content}</div>`;
+            results.appendChild(div);
+        }
+        
+        // Test 1: Check if modules_data.js loaded
+        if (typeof MODULES_DB !== 'undefined') {
+            addResult('success', '✅ modules_data.js Loaded Successfully', 
+                `Found ${MODULES_DB.length} modules in the database.`);
+                
+            // Test 2: Check module structure
+            if (MODULES_DB.length > 0) {
+                const firstModule = MODULES_DB[0];
+                addResult('info', '📋 First Module Structure', 
+                    `<pre>${JSON.stringify(firstModule, null, 2)}</pre>`);
+                    
+                // Test 3: Check categories
+                const categories = [...new Set(MODULES_DB.map(m => m.category))];
+                addResult('info', '📂 Available Categories', 
+                    `<ul>${categories.map(cat => `<li>${cat}</li>`).join('')}</ul>`);
+                    
+                // Test 4: Check targets
+                const targets = [...new Set(MODULES_DB.flatMap(m => m.targets))];
+                addResult('info', '🎯 Available Targets', 
+                    `<ul>${targets.map(target => `<li>${target}</li>`).join('')}</ul>`);
+            }
+        } else {
+            addResult('error', '❌ modules_data.js Failed to Load', 
+                'The MODULES_DB variable is not defined. This means the modules_data.js file did not load properly.');
+        }
+        
+        // Test 5: Check browser environment
+        addResult('info', '🌐 Browser Environment', `
+            <ul>
+                <li><strong>User Agent:</strong> ${navigator.userAgent}</li>
+                <li><strong>URL:</strong> ${window.location.href}</li>
+                <li><strong>Protocol:</strong> ${window.location.protocol}</li>
+                <li><strong>Host:</strong> ${window.location.host}</li>
+            </ul>
+        `);
+        
+        // Test 6: Console log check
+        console.log('=== nSploit Debug Information ===');
+        console.log('MODULES_DB defined:', typeof MODULES_DB !== 'undefined');
+        if (typeof MODULES_DB !== 'undefined') {
+            console.log('Module count:', MODULES_DB.length);
+            console.log('First module:', MODULES_DB[0]);
+        }
+        console.log('Current URL:', window.location.href);
+        console.log('=== End Debug Information ===');
+        
+        addResult('info', '📝 Console Logs', 
+            'Check your browser\'s developer console (F12) for additional debug information.');
+    </script>
+</body>
+</html>
